@@ -67,23 +67,65 @@ body {
 
 .hero {
     position: relative;
-
-    padding: 70px 24px 52px;
-
-    text-align: center;
-
+    min-height: 420px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
+    background: #0D1015;
+}
+
+.hero-imagem {
+    position: absolute;
+    inset: 0;
+
+    background-image: url("./banner-campeonato.png");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+
+    transform: scale(1.02);
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
 
     background:
-        repeating-linear-gradient(
-            115deg,
-            rgba(255, 255, 255, 0.025) 0px,
-            rgba(255, 255, 255, 0.025) 1px,
-            transparent 1px,
-            transparent 34px
+        linear-gradient(
+            180deg,
+            rgba(13, 16, 21, 0.30) 0%,
+            rgba(13, 16, 21, 0.55) 55%,
+            rgba(13, 16, 21, 0.96) 100%
         );
+}
 
-    border-bottom: 1px solid var(--divider);
+.hero-inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    text-align: center;
+    padding: 60px 20px 50px;
+}
+
+.hero h1 {
+    margin: 12px 0 8px;
+    font-size: 52px;
+    line-height: 1.05;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+}
+
+.hero .subtitulo {
+    margin: 0;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.82);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.hero-stat {
+    margin-top: 28px;
 }
 
 .hero::after {
