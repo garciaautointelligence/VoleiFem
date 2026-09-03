@@ -6,6 +6,10 @@
 const EXCEL_URL =
     "./torneio_interno_planilha_preenchivel.xlsx";
 
+let jogos = [];
+let classificacao = [];
+let escalacoesPorTime = {};
+
 // ============================================================
 // CONFIGURAÇÃO DOS TIMES
 // ============================================================
@@ -39,80 +43,6 @@ const TIMES = {
 
 };
 
-// ============================================================
-// DADOS
-// ============================================================
-
-let classificacao = [];
-let jogos = [];
-
-// ============================================================
-// CARREGAR BIBLIOTECA XLSX
-// ============================================================
-
-function carregarXLSX() {
-
-    return new Promise((resolve, reject) => {
-
-        if (window.XLSX) {
-            resolve();
-            return;
-        }
-
-        const script =
-            document.createElement("script");
-
-        script.src =
-            "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
-
-        script.onload = () => resolve();
-
-        script.onerror = () => {
-
-            reject(
-                new Error(
-                    "Não foi possível carregar a biblioteca XLSX."
-                )
-            );
-
-        };
-
-        document.head.appendChild(script);
-
-    });
-
-}
-
-// ============================================================
-// BAIXAR / LER EXCEL LOCAL
-// ============================================================
-
-async function baixarExcel() {
-
-    console.log(
-        "Carregando Excel:",
-        EXCEL_URL
-    );
-
-    const resposta =
-        await fetch(
-            EXCEL_URL,
-            {
-                cache: "no-store"
-            }
-        );
-
-    if (!resposta.ok) {
-
-        throw new Error(
-            `Não foi possível acessar o Excel. HTTP ${resposta.status}`
-        );
-
-    }
-
-    return await resposta.arrayBuffer();
-
-}
 
 // ============================================================
 // NORMALIZA TEXTO
@@ -120,18 +50,14 @@ async function baixarExcel() {
 
 function texto(valor) {
 
-    if (
-        valor === undefined ||
-        valor === null
-    ) {
+    if (valor === undefined || valor === null) {
         return "";
     }
 
-    return String(valor)
-        .trim()
-        .replace(/\s+/g, " ");
+    return String(valor).trim().replace(/\s+/g, " ");
 
 }
+
 
 // ============================================================
 // CONVERTE PARA NÚMERO
@@ -139,43 +65,25 @@ function texto(valor) {
 
 function numero(valor) {
 
-    if (
-        valor === undefined ||
-        valor === null ||
-        valor === ""
-    ) {
+    if (valor === undefined || valor === null || valor === "") {
         return 0;
     }
 
-    const n =
-        Number(
-            String(valor)
-                .replace(",", ".")
-                .trim()
-        );
+    const n = Number(String(valor).replace(",", ".").trim());
 
-    return Number.isFinite(n)
-        ? n
-        : 0;
+    return Number.isFinite(n) ? n : 0;
 
 }
 
+
 // ============================================================
-// FORMATA DATA PARA EXIBIÇÃO
-//
-// Exemplos:
-// 11/09/2026 → 11/setembro
-// 18/09/2026 → 18/setembro
-// 02/10/2026 → 02/outubro
+// FORMATAR DATA (tentativa robusta)
+// Retorna "dia-da-semana, DD de mês de YYYY" quando possível
 // ============================================================
 
 function formatarData(valor) {
 
-    if (
-        valor === undefined ||
-        valor === null ||
-        valor === ""
-    ) {
+    if (valor === undefined || valor === null || valor === "") {
         return "";
     }
 
@@ -194,126 +102,79 @@ function formatarData(valor) {
         "dezembro"
     ];
 
-    // ========================================================
-    // DATA REAL VINDO DO EXCEL
-    // ========================================================
+    const diasSemana = [
+        "domingo",
+        "segunda-feira",
+        "terça-feira",
+        "quarta-feira",
+        "quinta-feira",
+        "sexta-feira",
+        "sábado"
+    ];
 
-    if (
-        valor instanceof Date &&
-        !isNaN(valor.getTime())
-    ) {
+    const dataObj = obterDataObjeto(valor);
 
-        const dia =
-            String(
-                valor.getDate()
-            ).padStart(2, "0");
+    if (dataObj instanceof Date && !isNaN(dataObj.getTime())) {
 
-        const mes =
-            meses[valor.getMonth()];
+        const dia = String(dataObj.getDate()).padStart(2, "0");
+        const mes = meses[dataObj.getMonth()];
+        const ano = dataObj.getFullYear();
+        const diaNome = diasSemana[dataObj.getDay()];
 
-        return `${dia}/${mes}`;
+        return `${diaNome}, ${dia} de ${mes} de ${ano}`;
+
     }
 
-    // ========================================================
-    // NÚMERO SERIAL DO EXCEL
-    // ========================================================
+    // Fallback: tenta extrair dia e mês de textos como "11/set" ou "11/09/2026"
+    const data = texto(valor);
 
-    if (
-        typeof valor === "number" &&
-        Number.isFinite(valor)
-    ) {
-
-        const dataExcel =
-            new Date(
-                Date.UTC(
-                    1899,
-                    11,
-                    30
-                ) +
-                valor * 86400000
-            );
-
-        const dia =
-            String(
-                dataExcel.getUTCDate()
-            ).padStart(2, "0");
-
-        const mes =
-            meses[
-                dataExcel.getUTCMonth()
-            ];
-
-        return `${dia}/${mes}`;
-    }
-
-    // ========================================================
-    // TEXTO
-    // ========================================================
-
-    const data =
-        texto(valor);
-
-    // ========================================================
-    // DD/MM/AAAA
-    // DD/MM/AA
-    // DD-MM-AAAA
-    // ========================================================
-
-    const numeroData =
-        data.match(
-            /^(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?$/
-        );
+    const numeroData = data.match(/^(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?$/);
 
     if (numeroData) {
 
-        const dia =
-            numeroData[1]
-                .padStart(2, "0");
-
-        const numeroMes =
-            Number(numeroData[2]);
-
-        const mes =
-            meses[numeroMes - 1];
+        const dia = numeroData[1].padStart(2, "0");
+        const numeroMes = Number(numeroData[2]);
+        const mes = meses[numeroMes - 1];
+        const ano = numeroData[3] ? (Number(numeroData[3]) < 100 ? 2000 + Number(numeroData[3]) : Number(numeroData[3])) : new Date().getFullYear();
 
         if (mes) {
-            return `${dia}/${mes}`;
+            return `provável, ${dia} de ${mes} de ${ano}`;
         }
+
     }
 
-    // ========================================================
-    // JÁ ESTÁ COM MÊS ESCRITO
-    // ========================================================
-
-    const textoData =
-        data.match(
-            /^(\d{1,2})\s*[\/-]?\s*([a-zç]+)$/i
-        );
+    // Texto com mês escrito
+    const textoData = data.match(/^(\d{1,2})\s*[\/\-]?\s*([a-zç]+)/i);
 
     if (textoData) {
 
-        const dia =
-            textoData[1]
-                .padStart(2, "0");
-
-        const nomeMes =
-            textoData[2]
-                .toLowerCase();
-
-        const indiceMes =
-            meses.findIndex(
-                mes =>
-                    mes.startsWith(
-                        nomeMes.substring(0, 3)
-                    )
-            );
+        const dia = textoData[1].padStart(2, "0");
+        const nomeMes = textoData[2].toLowerCase();
+        const indiceMes = meses.findIndex(mes => mes.startsWith(nomeMes.substring(0, 3)));
 
         if (indiceMes >= 0) {
-            return `${dia}/${meses[indiceMes]}`;
+            return `provável, ${dia} de ${meses[indiceMes]} de ${new Date().getFullYear()}`;
         }
+
     }
 
     return data;
+}
+
+function formatarDataCurta(dataObjeto, valorOriginal) {
+
+    const meses = [
+        "jan", "fev", "mar", "abr", "mai", "jun",
+        "jul", "ago", "set", "out", "nov", "dez"
+    ];
+
+    const data = dataObjeto || obterDataObjeto(valorOriginal);
+
+    if (!(data instanceof Date) || isNaN(data.getTime())) {
+        return texto(valorOriginal);
+    }
+
+    return `${String(data.getDate()).padStart(2, "0")}/${meses[data.getMonth()]}`;
 }
 
 // ============================================================
@@ -665,16 +526,7 @@ function lerJogos(worksheet) {
         }
 
         // ====================================================
-        // DATA DE EXIBIÇÃO
-        // ====================================================
-
-        const data =
-            formatarData(
-                valorData
-            );
-
-        // ====================================================
-        // DATA REAL
+        // DATA DE EXIBIÇÃO E DATA REAL
         // ====================================================
 
         const dataObjeto =
@@ -682,18 +534,26 @@ function lerJogos(worksheet) {
                 valorData
             );
 
+        const dataFormatada =
+            formatarData(
+                valorData
+            );
+
+        const diaNumero = dataObjeto
+            ? String(dataObjeto.getDate()).padStart(2, "0")
+            : (String(dataFormatada).match(/^(\d{1,2})/) || ["", ""])[1].padStart(2, "0");
+
         // ====================================================
         // REGISTRA JOGO
         // ====================================================
 
         resultado.push({
 
-            data,
+            data: dataFormatada,
 
             dataObjeto,
 
-            dia:
-                data.split("/")[0] || "",
+            dia: diaNumero,
 
             hora,
 
@@ -705,12 +565,9 @@ function lerJogos(worksheet) {
 
             placarFora,
 
-            fase:
-                faseAtual,
+            fase: faseAtual,
 
-            faseGrupos:
-                faseAtual ===
-                "Fase de grupos"
+            faseGrupos: faseAtual === "Fase de grupos"
 
         });
 
@@ -823,6 +680,219 @@ function lerClassificacao(worksheet) {
 
 }
 
+function lerTimes(worksheet) {
+
+    if (!worksheet) return [];
+
+    const linhas = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        defval: "",
+        raw: true
+    });
+
+    const primeiraLinha = linhas[0] || [];
+    const cabecalho = primeiraLinha.map(valor =>
+        texto(valor).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    );
+    const indiceTime = cabecalho.findIndex(valor =>
+        ["time", "equipe"].includes(valor)
+    );
+    const indiceNome = cabecalho.findIndex(valor =>
+        ["nome", "jogadora", "jogador", "atleta"].includes(valor)
+    );
+    const indicePosicao = cabecalho.findIndex(valor =>
+        ["posicao", "posicao em quadra"].includes(valor)
+    );
+
+    const formatoTitularReserva =
+        cabecalho[0] === "t / r" || cabecalho[0] === "t/r";
+
+    if (formatoTitularReserva) {
+        return primeiraLinha.slice(1)
+            .map((valor, coluna) => ({
+                time: texto(valor),
+                coluna: coluna + 1
+            }))
+            .filter(item => TIMES[item.time])
+            .flatMap(item => linhas.slice(1)
+                .map(linha => ({
+                    time: item.time,
+                    nome: texto(linha[item.coluna]),
+                    posicao: "",
+                    status: texto(linha[0]).toUpperCase()
+                }))
+            )
+            .filter(jogadora => jogadora.nome);
+    }
+
+    if (indiceTime < 0 || indiceNome < 0) {
+        return primeiraLinha
+            .map((valor, indice) => ({
+                time: texto(valor),
+                coluna: indice
+            }))
+            .filter(item => TIMES[item.time])
+            .flatMap(item => linhas.slice(1)
+                .map(linha => ({
+                    time: item.time,
+                    nome: texto(linha[item.coluna]),
+                    posicao: "",
+                    status: ""
+                }))
+            )
+            .filter(jogadora => jogadora.nome);
+    }
+
+    return linhas.slice(1)
+        .map(linha => ({
+            time: texto(linha[indiceTime]),
+            nome: texto(linha[indiceNome]),
+            posicao: indicePosicao >= 0 ? texto(linha[indicePosicao]) : "",
+            status: ""
+        }))
+        .filter(jogadora => jogadora.time && jogadora.nome);
+
+}
+
+function renderEscalacoes(times) {
+
+    escalacoesPorTime = times.reduce((grupos, jogadora) => {
+        (grupos[jogadora.time] ||= []).push(jogadora);
+        return grupos;
+    }, {});
+
+}
+
+function abrirEscalacao(nomeTime) {
+
+    const jogadoras = escalacoesPorTime[nomeTime];
+    const modal = document.getElementById("escalação-modal");
+    const titulo = document.getElementById("escalação-modal-titulo");
+    const quadra = document.getElementById("escalação-quadra");
+    const lista = document.getElementById("escalação-lista");
+    const reservas = document.getElementById("escalação-reservas");
+    const listaReservas = reservas?.querySelector(".lista-jogadoras");
+
+    if (!jogadoras || !modal || !titulo || !quadra || !lista) return;
+
+    const configuracao = TIMES[nomeTime] || {};
+    const possuiStatus = jogadoras.some(jogadora =>
+        ["T", "R"].includes(jogadora.status)
+    );
+    const titulares = possuiStatus
+        ? jogadoras.filter(jogadora => jogadora.status === "T")
+        : jogadoras.slice(0, 6);
+    const jogadorasReservas = possuiStatus
+        ? jogadoras.filter(jogadora => jogadora.status === "R")
+        : jogadoras.slice(6);
+    titulo.innerHTML = `<span class="swatch ${configuracao.classe || ""}"></span>${nomeTime} ${configuracao.emoji || "🏐"}`;
+    quadra.className = `quadra ${configuracao.classe || ""}`;
+    quadra.setAttribute("aria-label", `Escalação de ${nomeTime}`);
+    quadra.innerHTML = `<span class="rede" aria-hidden="true"></span>${titulares.map((jogadora, indice) => `
+        <div class="jogadora-ponto ponto-${(indice % 6) + 1}" title="${jogadora.nome}"><span>${jogadora.nome}</span></div>
+    `).join("")}`;
+    lista.innerHTML = titulares.map(jogadora =>
+        `<li>${jogadora.nome}${jogadora.posicao ? ` <small>${jogadora.posicao}</small>` : ""}</li>`
+    ).join("");
+    if (reservas && listaReservas) {
+        reservas.hidden = jogadorasReservas.length === 0;
+        listaReservas.innerHTML = jogadorasReservas.map(jogadora =>
+            `<li>${jogadora.nome}${jogadora.posicao ? ` <small>${jogadora.posicao}</small>` : ""}</li>`
+        ).join("");
+    }
+    modal.hidden = false;
+    document.querySelector(".escalação-modal-fechar").focus();
+
+}
+
+function fecharEscalacao() {
+    const modal = document.getElementById("escalação-modal");
+    if (modal) modal.hidden = true;
+}
+
+function configurarModalEscalacao() {
+    document.querySelectorAll("[data-fechar-escalação]").forEach(elemento =>
+        elemento.addEventListener("click", fecharEscalacao)
+    );
+    document.addEventListener("keydown", evento => {
+        if (evento.key === "Escape") fecharEscalacao();
+    });
+
+}
+
+function calcularClassificacao(jogosDaCompeticao) {
+
+    const tabela = Object.keys(TIMES).map(nome => ({
+        nome,
+        jogos: 0,
+        vitorias: 0,
+        derrotas: 0,
+        pontos: 0,
+        setsPro: 0,
+        setsContra: 0
+    }));
+
+    const porNome = new Map(
+        tabela.map(time => [time.nome, time])
+    );
+
+    jogosDaCompeticao
+        .filter(jogo =>
+            jogo.faseGrupos &&
+            jogo.placarCasa !== "" &&
+            jogo.placarFora !== ""
+        )
+        .forEach(jogo => {
+
+            const casa = porNome.get(jogo.casa);
+            const fora = porNome.get(jogo.fora);
+
+            if (!casa || !fora) {
+                return;
+            }
+
+            const setsCasa = numero(jogo.placarCasa);
+            const setsFora = numero(jogo.placarFora);
+
+            casa.jogos += 1;
+            fora.jogos += 1;
+            casa.setsPro += setsCasa;
+            casa.setsContra += setsFora;
+            fora.setsPro += setsFora;
+            fora.setsContra += setsCasa;
+            casa.pontos += setsCasa;
+            fora.pontos += setsFora;
+
+            if (setsCasa > setsFora) {
+                casa.vitorias += 1;
+                fora.derrotas += 1;
+            } else if (setsFora > setsCasa) {
+                fora.vitorias += 1;
+                casa.derrotas += 1;
+            }
+
+        });
+
+    return tabela
+        .map(time => ({
+            ...time,
+            saldo: time.setsPro - time.setsContra,
+            pattern: TIMES[time.nome].classe,
+            emoji: TIMES[time.nome].emoji
+        }))
+        .sort((a, b) =>
+            b.pontos - a.pontos ||
+            b.saldo - a.saldo ||
+            b.setsPro - a.setsPro ||
+            a.nome.localeCompare(b.nome, "pt-BR")
+        )
+        .map((time, indice) => ({
+            ...time,
+            pos: indice + 1
+        }));
+
+}
+
 // ============================================================
 // RENDERIZAR CLASSIFICAÇÃO
 // ============================================================
@@ -856,6 +926,8 @@ function renderClassificacao() {
     cabecalho.className =
         "classificacao-header";
 
+    cabecalho.setAttribute("role", "row");
+
     cabecalho.innerHTML = `
 
         <span>Pos.</span>
@@ -878,6 +950,10 @@ function renderClassificacao() {
 
     `;
 
+    cabecalho.querySelectorAll("span").forEach(celula => {
+        celula.setAttribute("role", "columnheader");
+    });
+
     container.appendChild(
         cabecalho
     );
@@ -894,6 +970,10 @@ function renderClassificacao() {
 
             linha.className =
                 "classificacao-linha";
+
+            linha.tabIndex = 0;
+            linha.setAttribute("role", "button");
+            linha.setAttribute("aria-expanded", "false");
 
             const saldoClasse =
                 time.saldo >= 0
@@ -926,7 +1006,10 @@ function renderClassificacao() {
 
                     <span class="swatch ${time.pattern}"></span>
 
-                    ${time.nome}
+                    <button class="nome-time-botao" type="button" data-time="${time.nome}" aria-label="Ver escalação de ${time.nome}">
+                        ${time.nome}
+                        <small>Ver escalação</small>
+                    </button>
 
                 </span>
 
@@ -958,7 +1041,36 @@ function renderClassificacao() {
                     ${saldoTexto}
                 </span>
 
+                <span class="classificacao-detalhes-mobile">
+                    Vitórias: ${time.vitorias} · Derrotas: ${time.derrotas} ·
+                    Sets: ${time.setsPro} pró / ${time.setsContra} contra
+                </span>
+
             `;
+
+            const alternarDetalhes = () => {
+                const aberto = linha.classList.toggle("mostrar-detalhes");
+                linha.setAttribute("aria-expanded", String(aberto));
+            };
+
+            linha.addEventListener("click", alternarDetalhes);
+            linha.addEventListener("keydown", evento => {
+                if (evento.key === "Enter" || evento.key === " ") {
+                    evento.preventDefault();
+                    alternarDetalhes();
+                }
+            });
+
+            const botaoTime = linha.querySelector(".nome-time-botao");
+            if (escalacoesPorTime[time.nome]) {
+                botaoTime.addEventListener("click", evento => {
+                    evento.stopPropagation();
+                    abrirEscalacao(time.nome);
+                });
+            } else {
+                botaoTime.disabled = true;
+                botaoTime.removeAttribute("aria-label");
+            }
 
             container.appendChild(
                 linha
@@ -1269,6 +1381,8 @@ function renderJogos() {
             card.className =
                 "jogo-card";
 
+            card.setAttribute("role", "listitem");
+
             const timeCasa =
                 TIMES[jogo.casa] || {};
 
@@ -1336,8 +1450,8 @@ function renderJogos() {
 
                 <div class="jogo-data">
 
-                    <div class="dia">
-                        ${jogo.dia}
+                    <div class="dia" title="${jogo.data}" aria-label="${jogo.data}">
+                        ${formatarDataCurta(jogo.dataObjeto, jogo.data)}
                     </div>
 
                     <div class="hora">
@@ -1351,7 +1465,7 @@ function renderJogos() {
                     <div class="time time-casa">
 
                         <span class="animal">
-                            ${animalCasa}
+                            <span aria-hidden="true">${animalCasa}</span>
                         </span>
 
                         <span class="swatch ${patternCasa}"></span>
@@ -1375,7 +1489,7 @@ function renderJogos() {
                         <span class="swatch ${patternFora}"></span>
 
                         <span class="animal">
-                            ${animalFora}
+                            <span aria-hidden="true">${animalFora}</span>
                         </span>
 
                     </div>
@@ -1426,6 +1540,138 @@ function renderJogos() {
 }
 
 // ============================================================
+// RENDERIZAR ÚLTIMOS RESULTADOS
+// Mostra partidas já encerradas (mais recentes primeiro)
+// ============================================================
+
+function renderUltimosResultados() {
+
+    const container = document.getElementById(
+        "ultimos-resultados"
+    );
+
+    if (!container) {
+
+        console.warn('Elemento "#ultimos-resultados" não encontrado.');
+        return;
+
+    }
+
+    container.innerHTML = "";
+
+    const encerrados = jogos.filter(
+        jogo =>
+            jogo.placarCasa !== "" &&
+            jogo.placarFora !== ""
+    );
+
+    if (encerrados.length === 0) {
+
+        container.innerHTML = `
+
+            <div style="padding:12px;color:var(--muted);">
+
+                Nenhum resultado encontrado.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+    encerrados.sort((a, b) => {
+
+        const da = a.dataObjeto ? a.dataObjeto.getTime() : 0;
+        const db = b.dataObjeto ? b.dataObjeto.getTime() : 0;
+        if (da !== db) return db - da;
+        return obterMinutosHora(b.hora) - obterMinutosHora(a.hora);
+
+    });
+
+    const recentes = encerrados.slice(0, 6);
+
+    recentes.forEach(jogo => {
+
+        const timeCasa = TIMES[jogo.casa] || {};
+        const timeFora = TIMES[jogo.fora] || {};
+
+        const scoreCasa = jogo.placarCasa || "0";
+        const scoreFora = jogo.placarFora || "0";
+
+        const pontosCasa = Number(String(scoreCasa).replace(/[^0-9]/g, '')) || 0;
+        const pontosFora = Number(String(scoreFora).replace(/[^0-9]/g, '')) || 0;
+
+        const vencedor = pontosCasa > pontosFora ? jogo.casa : (pontosFora > pontosCasa ? jogo.fora : 'Empate');
+
+        const card = document.createElement('div');
+        card.className = 'resultado-card';
+        card.setAttribute('role', 'listitem');
+
+        card.innerHTML = `
+
+            <div style="width:120px; font-size:13px; color:var(--muted);">
+                ${jogo.data} <br><span style="font-weight:800;color:var(--text);">${jogo.hora || ''}</span>
+            </div>
+
+            <div class="resultado-info">
+                <div style="font-weight:800">${jogo.casa} <span style="color:var(--muted);font-weight:600">×</span> ${jogo.fora}</div>
+                <div style="font-size:13px;color:var(--muted);">${jogo.fase}</div>
+            </div>
+
+            <div class="resultado-score">${scoreCasa} × ${scoreFora}</div>
+
+            <div style="width:120px;text-align:center;">
+                <div class="resultado-winner">${vencedor}</div>
+            </div>
+
+        `;
+
+        container.appendChild(card);
+
+    });
+
+}
+
+function renderChaveamento() {
+
+    const container = document.getElementById("chaveamento");
+    if (!container) return;
+
+    const fases = [
+        { nome: "Semifinais", classe: "semifinais" },
+        { nome: "Disputa de 3º lugar", classe: "terceiro" },
+        { nome: "Final", classe: "final" }
+    ];
+
+    container.innerHTML = fases.map(fase => {
+
+        const partidas = jogos.filter(jogo => jogo.fase === fase.nome);
+        const conteudo = partidas.length > 0
+            ? partidas.map((jogo, indice) => `
+                <div class="chave-card">
+                    <span class="chave-jogo">Jogo ${indice + 1}</span>
+                    <strong>${jogo.casa}</strong>
+                    <span class="chave-versus">×</span>
+                    <strong>${jogo.fora}</strong>
+                    <small>${jogo.data} · ${jogo.hora}</small>
+                </div>
+            `).join("")
+            : `<div class="chave-vazio">A definir</div>`;
+
+        return `
+            <div class="chave-coluna chave-${fase.classe}">
+                <h3>${fase.nome}</h3>
+                ${conteudo}
+            </div>
+        `;
+
+    }).join("");
+
+}
+
+// ============================================================
 // ATUALIZAR RESUMO
 //
 // Considera somente os jogos da fase de grupos.
@@ -1468,10 +1714,54 @@ function atualizarResumo() {
 
     if (denominador) {
 
-        denominador.textContent =
-            `/${total} jogos disputados`;
+        // Explica claramente qual conjunto está sendo contado
+        const faseTexto = total > 0 ? 'da fase de grupos' : '';
+        denominador.textContent = `/${total} jogos ${faseTexto}`;
 
     }
+
+    const atualizarElemento = (id, valor) => {
+        const elemento = document.getElementById(id);
+        if (elemento) elemento.textContent = valor;
+    };
+
+    const restantes = jogosFaseGrupos.filter(
+        jogo =>
+            jogo.placarCasa === "" ||
+            jogo.placarFora === ""
+    ).length;
+
+    const lider = classificacao[0];
+    const maiorSaldo = classificacao.reduce(
+        (maior, time) =>
+            !maior || time.saldo > maior.saldo ? time : maior,
+        null
+    );
+
+    const proximos = jogos
+        .filter(jogo =>
+            jogo.placarCasa === "" &&
+            jogo.placarFora === "" &&
+            jogo.dataObjeto instanceof Date &&
+            !isNaN(jogo.dataObjeto.getTime())
+        )
+        .sort((a, b) =>
+            a.dataObjeto.getTime() - b.dataObjeto.getTime() ||
+            obterMinutosHora(a.hora) - obterMinutosHora(b.hora)
+        );
+
+    atualizarElemento("resumo-restantes", restantes);
+    atualizarElemento("resumo-lider", lider ? lider.nome : "—");
+    atualizarElemento(
+        "resumo-saldo",
+        maiorSaldo ? `${maiorSaldo.nome} (+${maiorSaldo.saldo})` : "—"
+    );
+    atualizarElemento(
+        "resumo-proxima",
+        proximos.length > 0
+            ? `${proximos[0].casa} × ${proximos[0].fora}`
+            : "Encerrado"
+    );
 
 }
 
@@ -1546,6 +1836,124 @@ function mostrarErro(erro) {
 // ============================================================
 // CARREGAMENTO PRINCIPAL
 // ============================================================
+
+// ============================================================
+// CARREGAR BIBLIOTECA XLSX
+// ============================================================
+
+function carregarXLSX() {
+
+    return new Promise((resolve, reject) => {
+
+        if (window.XLSX) {
+            resolve();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Não foi possível carregar a biblioteca XLSX.'));
+        document.head.appendChild(script);
+
+    });
+
+}
+
+
+// ============================================================
+// BAIXAR / LER EXCEL LOCAL
+// ============================================================
+
+async function baixarExcel() {
+
+    console.log('Carregando Excel:', EXCEL_URL);
+
+    const resposta = await fetch(EXCEL_URL, { cache: 'no-store' });
+
+    if (!resposta.ok) {
+        throw new Error(`Não foi possível acessar o Excel. HTTP ${resposta.status}`);
+    }
+
+    return await resposta.arrayBuffer();
+
+}
+
+
+// ============================================================
+// PROCESSAR WORKBOOK (reutilizável para fetch ou upload)
+// ============================================================
+
+function processWorkbook(workbook) {
+
+    try {
+
+        console.log('Abas encontradas:', workbook.SheetNames);
+
+        const abaJogos = encontrarAba(workbook, 'Tabela de Jogos');
+
+        jogos = lerJogos(abaJogos);
+
+        console.log('Jogos encontrados:', jogos.length);
+
+        classificacao = calcularClassificacao(jogos);
+
+        const nomeAbaTimes = workbook.SheetNames.find(nome =>
+            ["time", "times"].includes(nome.trim().toLowerCase())
+        );
+        const abaTimes = nomeAbaTimes ? workbook.Sheets[nomeAbaTimes] : null;
+        renderEscalacoes(lerTimes(abaTimes));
+
+        console.log('Times encontrados:', classificacao.length);
+
+        renderClassificacao();
+        renderJogos();
+        renderUltimosResultados();
+        renderChaveamento();
+        atualizarResumo();
+
+        console.log('Dados carregados com sucesso via workbook.');
+
+    } catch (e) {
+        mostrarErro(e);
+    }
+
+}
+
+
+// ============================================================
+// HANDLERS DE UPLOAD (botão e input adicionados em index.html)
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    configurarModalEscalacao();
+
+    const btn = document.getElementById('btn-upload-planilha');
+    const input = document.getElementById('file-excel');
+
+    if (btn && input) {
+
+        btn.addEventListener('click', () => input.click());
+
+        input.addEventListener('change', async (ev) => {
+
+            const file = ev.target.files && ev.target.files[0];
+            if (!file) return;
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
+                processWorkbook(workbook);
+            } catch (err) {
+                mostrarErro(err);
+            }
+
+        });
+
+    }
+
+});
 
 async function carregarDados() {
 
@@ -1626,16 +2034,15 @@ async function carregarDados() {
         // 5 — CLASSIFICAÇÃO
         // ====================================================
 
-        const abaClassificacao =
-            encontrarAba(
-                workbook,
-                "Classificação"
+        classificacao =
+            calcularClassificacao(
+                jogos
             );
 
-        classificacao =
-            lerClassificacao(
-                abaClassificacao
-            );
+        const nomeAbaTimes = workbook.SheetNames.find(nome =>
+            ["time", "times"].includes(nome.trim().toLowerCase())
+        );
+        renderEscalacoes(nomeAbaTimes ? lerTimes(workbook.Sheets[nomeAbaTimes]) : []);
 
         console.log(
             "Times encontrados:",
@@ -1649,6 +2056,10 @@ async function carregarDados() {
         renderClassificacao();
 
         renderJogos();
+
+        renderUltimosResultados();
+
+        renderChaveamento();
 
         atualizarResumo();
 

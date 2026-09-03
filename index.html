@@ -32,10 +32,37 @@
     <p class="subtitulo">
       Vôlei feminino · fase de grupos · 5 equipes
     </p>
+    <p class="subtitulo">
+      Responsável Prof. Day Tozzi
+    </p>
 
     <div class="hero-stat">
-      <span class="hero-stat-num">5</span>
-      <span class="hero-stat-den">/10 jogos disputados</span>
+      <span class="hero-stat-num">0</span>
+      <span class="hero-stat-den">/0 jogos disputados</span>
+    </div>
+
+    <div class="hero-resumo" aria-label="Resumo do campeonato">
+      <div class="hero-resumo-item">
+        <span class="hero-resumo-label">Restantes</span>
+        <strong id="resumo-restantes">0</strong>
+      </div>
+      <div class="hero-resumo-item">
+        <span class="hero-resumo-label">Líder</span>
+        <strong id="resumo-lider">—</strong>
+      </div>
+      <div class="hero-resumo-item">
+        <span class="hero-resumo-label">Maior saldo</span>
+        <strong id="resumo-saldo">—</strong>
+      </div>
+      <div class="hero-resumo-item hero-resumo-proximo">
+        <span class="hero-resumo-label">Próxima partida</span>
+        <strong id="resumo-proxima">—</strong>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <button id="btn-upload-planilha" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:6px 10px;border-radius:8px;">Carregar planilha (se necessário)</button>
+      <input id="file-excel" type="file" accept=".xlsx,.xls" style="display:none" />
     </div>
   </div>
 
@@ -50,11 +77,11 @@
         <p>Os 4 primeiros avançam à semifinal</p>
       </div>
 
-      <div class="classificacao-quadro" id="classificacao">
+      <div class="classificacao-quadro" id="classificacao" role="table" aria-label="Classificação do campeonato">
         <!-- preenchido via script.js -->
       </div>
 
-      <p class="legenda">Semifinais: 1º × 4º e 2º × 3º · pontos = sets vencidos no torneio</p>
+      <p class="legenda">Semifinais: 1º × 4º e 2º × 3º · pontos = sets vencidos · desempate: saldo de sets e sets pró</p>
     </section>
 
     <section class="bloco">
@@ -63,15 +90,75 @@
         <p>Ginásio AABB</p>
       </div>
 
-      <div class="jogos-lista" id="jogos">
+      <div class="jogos-lista" id="jogos" role="list" aria-label="Próximos jogos">
         <!-- preenchido via script.js -->
       </div>
     </section>
 
+    <section class="bloco">
+      <div class="bloco-cabecalho">
+        <h2>Últimos resultados</h2>
+        <p>Partidas já encerradas</p>
+      </div>
+
+      <div class="ultimos-resultados" id="ultimos-resultados" role="list" aria-label="Últimos resultados">
+        <!-- preenchido via script.js -->
+      </div>
+    </section>
+
+    <section class="bloco">
+      <div class="bloco-cabecalho">
+        <h2>Chaveamento</h2>
+        <p>Caminho até a final</p>
+      </div>
+
+      <div class="chaveamento" id="chaveamento"></div>
+    </section>
+
   </main>
 
+  <div class="escalação-modal" id="escalação-modal" hidden>
+    <div class="escalação-modal-backdrop" data-fechar-escalação></div>
+    <section class="escalação-modal-conteudo" role="dialog" aria-modal="true" aria-labelledby="escalação-modal-titulo">
+      <button class="escalação-modal-fechar" type="button" aria-label="Fechar escalação" data-fechar-escalação>×</button>
+      <h2 id="escalação-modal-titulo"></h2>
+      <div class="quadra" id="escalação-quadra"></div>
+      <h3 class="escalação-subtitulo">Em quadra</h3>
+      <ul class="lista-jogadoras" id="escalação-lista"></ul>
+      <div class="reservas" id="escalação-reservas" hidden>
+        <h3 class="escalação-subtitulo">Reservas</h3>
+        <ul class="lista-jogadoras"></ul>
+      </div>
+    </section>
+  </div>
+
   <footer class="rodape">
-    <p>Campeonato dos Bichos · Torneio Interno AABB</p>
+    <div class="rodape-grid">
+      <div class="rodape-identidade">
+        <strong>Garcia Intelligence</strong>
+        <span>Desenvolvido por Ari Garcia</span>
+      </div>
+
+      <div class="rodape-contato">
+        <span class="rodape-label">Contato</span>
+        <a href="mailto:garcia.autointelligence@gmail.com">garcia.autointelligence@gmail.com</a>
+      </div>
+
+      <div class="rodape-localizacao">
+        <span class="rodape-label">Localização</span>
+        <iframe
+          title="Mapa da localização do campeonato"
+          src="https://www.google.com/maps?q=Rua%20Nossa%20Senhora%20do%20Bom%20Conselho%2C%20300&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <a href="https://www.google.com/maps/search/?api=1&query=Rua%20Nossa%20Senhora%20do%20Bom%20Conselho%2C%20300" target="_blank" rel="noopener">Abrir no Google Maps <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+
+    <div class="rodape-base">
+      <span>© Copyright 2026 Garcia Intelligence</span>
+      <a href="Regulamento%20Torneio%20Interno%20de%20Vo%CC%82lei%20-%202026.pdf" target="_blank" rel="noopener" class="rodape-regulamento">Ler regulamento completo</a>
+    </div>
   </footer>
 
   <script src="script.js"></script>
