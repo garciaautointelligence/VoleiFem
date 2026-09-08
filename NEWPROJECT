@@ -1,0 +1,576 @@
+Crie uma aplicação web completa, responsiva e moderna para a **PULSAR — Sports Data & Intelligence**, funcionando como um portal esportivo interativo orientado a dados.
+
+O PULSAR deve começar como um portal de campeonatos, resultados e notícias esportivas, mas sua arquitetura deve ser preparada desde o início para evoluir para uma plataforma de dados, estatísticas, histórico esportivo, analytics e inteligência artificial.
+
+### 1. Conceito do produto
+
+O PULSAR deve conectar:
+
+**Campeonatos → Partidas → Eventos → Atletas → Estatísticas → Histórico → Analytics → Inteligência**
+
+A interface pública deve priorizar a experiência do torcedor e participante, enquanto a arquitetura de dados deve priorizar a coleta estruturada e histórica das informações esportivas.
+
+Não limitar a aplicação a um único clube, modalidade ou formato de competição.
+
+A arquitetura deve ser preparada para suportar múltiplos clubes/organizações no futuro, mesmo que os dados mockados inicialmente representem apenas uma organização.
+
+---
+
+### 2. Página inicial
+
+Criar uma homepage institucional e esportiva contendo:
+
+* Hero principal da PULSAR
+* Apresentação curta da plataforma
+* Campeonatos em destaque
+* Campeonatos em andamento
+* Próximos jogos
+* Últimos resultados
+* Notícias recentes
+* Modalidades esportivas
+* Atletas em destaque
+* Equipes em destaque
+* Estatísticas/resumos relevantes
+* CTA para explorar campeonatos
+
+Utilizar cards, carrosséis horizontais, microanimações e hierarquia visual clara.
+
+---
+
+### 3. Navegação principal
+
+Criar menu principal com acesso a:
+
+* Início
+* Campeonatos
+* Modalidades
+* Equipes
+* Atletas
+* Jogos
+* Notícias
+* Classificações
+* Estatísticas
+* PULSAR Intelligence
+
+Criar também menu mobile completo e responsivo.
+
+Adicionar busca global permitindo pesquisar por:
+
+* Campeonato
+* Temporada
+* Equipe
+* Atleta
+* Dupla
+* Partida
+* Notícia
+
+---
+
+### 4. Campeonatos
+
+Criar página de listagem de campeonatos com filtros por:
+
+* Modalidade
+* Status
+* Temporada
+* Categoria
+* Tipo de competição
+* Organização/clube
+
+Status possíveis:
+
+* Rascunho
+* Inscrições abertas
+* Agendado
+* Em andamento
+* Pausado
+* Finalizado
+* Cancelado
+
+Permitir visualizar:
+
+* Todos
+* Próximos
+* Em andamento
+* Encerrados
+
+---
+
+### 5. Página individual do campeonato
+
+Cada campeonato deve possuir uma página própria contendo:
+
+* Logo da modalidade
+* Logo do campeonato
+* Nome
+* Descrição
+* Organização
+* Modalidade
+* Temporada
+* Categoria
+* Status
+* Datas
+* Regulamento
+* Número de participantes
+* Calendário
+* Próximos jogos
+* Últimos resultados
+* Classificação
+* Equipes
+* Duplas
+* Atletas
+* Notícias
+* Estatísticas
+* Patrocinadores
+
+Utilizar navegação interna por abas.
+
+---
+
+### 6. Formatos de competição
+
+O sistema deve suportar diferentes formatos:
+
+#### Equipes
+
+Exibir:
+
+* Nome da equipe
+* Logo
+* Técnico/responsável
+* Elenco
+* Jogos
+* Vitórias
+* Derrotas
+* Pontuação
+* Estatísticas
+
+#### Duplas
+
+A dupla deve ser tratada como uma unidade competitiva composta por duas pessoas.
+
+Exibir:
+
+* Nome da dupla
+* Atleta 1
+* Atleta 2
+* Jogos
+* Resultados
+* Estatísticas
+* Histórico
+
+#### Individual
+
+Cada atleta deve ser uma unidade competitiva independente.
+
+Exibir:
+
+* Foto
+* Nome
+* Modalidade
+* Categoria
+* Resultados
+* Estatísticas
+* Histórico
+* Evolução
+
+---
+
+### 7. Partidas e eventos
+
+Criar página individual para cada partida.
+
+Exibir:
+
+* Campeonato
+* Rodada
+* Data
+* Horário
+* Local
+* Participantes
+* Resultado
+* Status
+* Eventos
+* Estatísticas
+* Histórico do confronto
+
+A arquitetura deve possuir uma entidade genérica de **eventos esportivos**, preparada para registrar eventos como:
+
+* Gol
+* Ponto
+* Set
+* Cartão
+* Falta
+* Substituição
+* Penalidade
+* Outro evento específico da modalidade
+
+Os eventos devem poder estar associados à partida, equipe, atleta ou participante.
+
+---
+
+### 8. Estatísticas
+
+Criar uma arquitetura flexível para estatísticas por modalidade.
+
+Não criar uma estrutura rígida dependente de uma única modalidade.
+
+Exemplos:
+
+Vôlei:
+
+* Pontos
+* Aces
+* Bloqueios
+* Ataques
+* Erros
+
+Futebol:
+
+* Gols
+* Assistências
+* Finalizações
+* Cartões
+
+Basquete:
+
+* Pontos
+* Rebotes
+* Assistências
+* Roubos
+
+Tênis:
+
+* Aces
+* Duplas faltas
+* Games
+* Sets
+
+A estrutura deve permitir adicionar novas estatísticas sem necessidade de reconstruir a aplicação.
+
+---
+
+### 9. Atletas
+
+Criar página individual de atleta contendo:
+
+* Foto
+* Nome
+* Modalidade
+* Categoria
+* Equipe atual
+* Duplas atuais
+* Estatísticas
+* Jogos recentes
+* Resultados
+* Histórico por temporada
+* Histórico por campeonato
+* Evolução de desempenho
+
+Preparar visualmente a página para futuros gráficos de evolução.
+
+---
+
+### 10. Equipes e duplas
+
+Criar páginas individuais para equipes e duplas contendo:
+
+* Identidade visual
+* Integrantes
+* Campeonato atual
+* Jogos
+* Resultados
+* Classificação
+* Estatísticas
+* Histórico
+* Notícias relacionadas
+
+---
+
+### 11. Notícias
+
+Criar portal de notícias com:
+
+* Destaques
+* Últimas notícias
+* Categorias
+* Modalidades
+* Campeonatos relacionados
+* Notícias relacionadas
+* Página individual da notícia
+
+As notícias devem poder estar relacionadas a:
+
+* Organização
+* Modalidade
+* Campeonato
+* Temporada
+* Equipe
+* Atleta
+* Partida
+
+---
+
+### 12. Histórico esportivo
+
+A arquitetura deve preservar histórico de:
+
+* Temporadas
+* Campeonatos
+* Equipes
+* Atletas
+* Duplas
+* Partidas
+* Resultados
+* Eventos
+* Estatísticas
+
+Um atleta deve poder possuir histórico em diferentes temporadas, campeonatos e equipes.
+
+O sistema não deve sobrescrever informações históricas quando uma nova temporada for criada.
+
+---
+
+### 13. PULSAR Intelligence
+
+Criar uma seção visual preparada para futura análise de dados.
+
+Criar inicialmente dashboards mockados com:
+
+* Desempenho de atletas
+* Desempenho de equipes
+* Evolução por temporada
+* Comparação entre atletas
+* Comparação entre equipes
+* Tendências
+* Rankings
+* Indicadores de desempenho
+
+Preparar a arquitetura para futura integração com:
+
+* Python
+* Power BI
+* APIs de analytics
+* Machine Learning
+* Inteligência Artificial
+
+Não é necessário implementar modelos de IA reais nesta primeira versão.
+
+---
+
+### 14. Painel administrativo
+
+Criar uma área `/admin` preparada para gerenciamento do sistema.
+
+Módulos:
+
+* Dashboard
+* Organizações
+* Modalidades
+* Temporadas
+* Campeonatos
+* Equipes
+* Duplas
+* Atletas
+* Partidas
+* Resultados
+* Eventos
+* Estatísticas
+* Notícias
+* Patrocinadores
+* Configurações
+
+Criar interfaces de listagem, criação, edição e visualização utilizando dados mockados.
+
+---
+
+### 15. Modelo de dados
+
+Criar tipos/interfaces TypeScript para:
+
+* Organization
+* Season
+* Sport
+* Championship
+* Category
+* Team
+* Pair
+* Athlete
+* Match
+* MatchEvent
+* Result
+* Standing
+* Statistic
+* News
+* Sponsor
+
+Criar relacionamentos claros entre as entidades.
+
+A arquitetura deve permitir futuramente substituir os mocks por uma API REST ou Supabase sem necessidade de reescrever os componentes de interface.
+
+---
+
+### 16. Arquitetura técnica
+
+Utilizar:
+
+* React
+* TypeScript
+* Vite
+* Tailwind CSS
+* React Router
+* Componentes reutilizáveis
+* Hooks
+* Services
+* Tipagem forte
+* Dados mockados
+* Estrutura preparada para API
+* Arquitetura modular
+
+Separar claramente:
+
+```text
+components/
+pages/
+layouts/
+routes/
+hooks/
+services/
+types/
+mocks/
+utils/
+assets/
+```
+
+Não hardcodar dados diretamente nos componentes.
+
+Criar uma camada de serviços que inicialmente consuma mocks e que posteriormente possa ser substituída por API/Supabase.
+
+---
+
+### 17. UX/UI
+
+Criar identidade visual própria para:
+
+# PULSAR
+
+### Sports Data & Intelligence
+
+A identidade deve transmitir:
+
+* Esporte
+* Movimento
+* Dados
+* Tecnologia
+* Precisão
+* Competição
+* Inteligência
+
+Utilizar:
+
+* Cards brancos
+* Bordas arredondadas
+* Sombras leves
+* Tipografia moderna
+* Espaçamento consistente
+* Boa hierarquia visual
+* Microanimações discretas
+* Estados de hover
+* Transições suaves
+* Componentes visualmente consistentes
+
+Não copiar identidade visual, textos, códigos ou layouts de outros sites.
+
+Utilizar apenas assets próprios, autorizados ou placeholders.
+
+---
+
+### 18. Responsividade
+
+Aplicação mobile-first e totalmente responsiva para:
+
+* Desktop
+* Notebook
+* Tablet
+* Smartphone
+
+Criar:
+
+* Menu mobile
+* Tabelas adaptáveis
+* Carrosséis horizontais
+* Cards responsivos
+* Gráficos adaptáveis
+* Navegação por abas adaptável
+
+As tabelas devem funcionar corretamente em telas pequenas sem quebrar o layout.
+
+---
+
+### 19. Acessibilidade
+
+Implementar:
+
+* HTML semântico
+* Navegação por teclado
+* Foco visível
+* Labels apropriados
+* ARIA quando necessário
+* Contraste adequado
+* Textos alternativos para imagens
+* Estados de loading acessíveis
+* Mensagens de erro compreensíveis
+
+---
+
+### 20. Estados da aplicação
+
+Criar estados visuais para:
+
+* Loading
+* Skeleton
+* Empty state
+* Error state
+* Success
+* Dados inexistentes
+* Campeonato sem partidas
+* Campeonato encerrado
+* Atleta sem estatísticas
+* Equipe sem histórico
+* Busca sem resultados
+
+---
+
+### 21. Preparação para dados reais
+
+Os mocks devem parecer dados reais e possuir relacionamentos consistentes.
+
+Criar dados suficientes para demonstrar:
+
+* Pelo menos 3 modalidades
+* Campeonatos em diferentes status
+* Múltiplas temporadas
+* Equipes
+* Duplas
+* Atletas individuais
+* Partidas
+* Resultados
+* Classificações
+* Eventos
+* Notícias
+* Estatísticas
+* Patrocinadores
+
+Os dados devem possuir IDs e relacionamentos consistentes.
+
+---
+
+### 22. Objetivo final
+
+O resultado não deve parecer apenas um site institucional.
+
+Deve parecer um **produto digital esportivo real**, capaz de começar como portal de campeonatos e evoluir para uma plataforma de **Sports Data & Intelligence**.
+
+A experiência deve deixar claro que o PULSAR não apenas mostra o que aconteceu no esporte.
+
+Ele **registra, organiza, contextualiza e transforma acontecimentos esportivos em dados que podem gerar inteligência no futuro.**
